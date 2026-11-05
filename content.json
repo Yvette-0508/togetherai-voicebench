@@ -3,7 +3,7 @@
     "author": "Yvette Pan",
     "role": "Model APIs & Developer Experience",
     "date": "Nov 5, 2026",
-    "repo": "https://github.com/Yvette-0508/together-ai-migration-test"
+    "repo": "https://github.com/Yvette-0508/togetherai-voicebench"
   },
   "summary": "A voice agent built only on Together AI: realtime STT, a streamed chat model, realtime TTS.",
   "stages": [
