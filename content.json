@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "author": "Yvette Pan",
+    "role": "Model APIs & Developer Experience",
+    "date": "Nov 5, 2026",
+    "repo": "https://github.com/yanpan/together-voice-test"
+  },
+  "summary": "A voice agent built only on Together AI: realtime STT, a streamed chat model, realtime TTS.",
+  "stages": [
+    {"id": "vad", "label": "Waiting for silence", "tone": "hot"},
+    {"id": "stt", "label": "Final transcript", "tone": "light"},
+    {"id": "llm", "label": "First sentence from the model", "tone": "ink"},
+    {"id": "tts", "label": "First audio", "tone": "mid"}
+  ],
+  "checks": [
+    {"id": "long_question", "name": "Long question stays one turn", "tag": "8 s of speech",
+     "note": "Watch for splits at the 5 s segment limit."},
+    {"id": "tool_valid", "name": "Tool call valid inside the turn"},
+    {"id": "wer", "name": "Transcript matches the script", "tag": "WER ≤ 5%"},
+    {"id": "openai_voice", "name": "OpenAI voice names", "tag": "voice=alloy",
+     "note": "Voices are named per model; Kokoro calls it af_alloy."},
+    {"id": "clear_stops", "name": "input_text_buffer.clear stops audio",
+     "note": "Buffered ahead of the playhead when the command landed: {interrupt.buffered_at_cmd_p50_ms} ms. The client must flush its own buffer."},
+    {"id": "cancel_stop", "name": "context.cancel to silence", "kind": "value"}
+  ],
+  "fixes": [
+    {"title": "Turn-taking eats the budget",
+     "why": "Together's own phone-agent guide moves VAD client-side to avoid it",
+     "viz": {"type": "share", "turn": 0, "stage": "vad"},
+     "do": "A voice-agent preset and semantic end-of-turn, not one silence default.",
+     "target": "p50 under 800 ms, end of speech to audio"},
+    {"title": "Three APIs to glue",
+     "why": "STT has an SDK, TTS has none; auth and event names differ",
+     "viz": {"type": "big", "text": "180", "small": "lines of glue"},
+     "do": "One realtime voice session, or an SDK helper that runs the loop.",
+     "target": "first working voice agent in under 30 min"},
+    {"title": "clear is not stop",
+     "why": "the real stop lives in the multi-context section",
+     "viz": {"type": "rows", "rows": [["input_text_buffer.clear", "keeps playing", true], ["context.cancel", "stops", false]]},
+     "do": "Document one barge-in recipe; make cancel work on the default context.",
+     "target": "interrupt to silence under 150 ms"}
+  ],
+  "compare": {
+    "today": {
+      "code": "<span class=\"c\"># 1. STT: WebSocket session</span>\nstt = STTSession(model=STT, sample_rate=16_000)\nawait stt.connect()\n\n<span class=\"c\"># 2. Model: HTTP stream, split into sentences</span>\nstream = client.chat.completions.create(\n    model=LLM, stream=True, tools=TOOLS, ...)\n\n<span class=\"c\"># 3. TTS: raw WebSocket, no SDK</span>\ntts = TTSSession(model=TTS, voice=\"af_alloy\")\n\n<span class=\"c\"># then you write: real-time pacing, end-of-turn,\n# sentence splitting, the tool loop, barge-in with\n# context.cancel, reconnects, 16 kHz in / 24 kHz out</span>"
+    },
+    "proposed": {
+      "lines": 30,
+      "code": "session = client.realtime.voice(\n    stt=STT, model=LLM, tts=TTS,\n    voice=\"af_alloy\",\n    turn_detection={\"type\": \"semantic\"},\n    tools=TOOLS,\n)\n\nasync for event in session.run(mic):\n    if event.type == \"response.audio.delta\":\n        speaker.play(event.audio)\n\n<span class=\"c\"># barge-in handled in the session;\n# session.cancel() when you need it</span>"
+    }
+  },
+  "works": ["server VAD presets", "STT auto-reconnect with replay", "context.cancel", "segment modes", "word timestamps", "pronunciation dictionary", "μ-law for phone calls"],
+  "footnote": "20 turns per row, synthetic speech, one region, measured client-side. One default model per stage; model choice is not the point here"
+}

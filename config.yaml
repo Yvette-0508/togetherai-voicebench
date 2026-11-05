@@ -1,0 +1,26 @@
+client_location: "San Francisco, home Wi-Fi"   # printed in the page footnote
+models:
+  stt: openai/whisper-large-v3
+  # fast instruct model from the serverless list; confirm availability on first run
+  llm: meta-llama/Llama-3.3-70B-Instruct-Turbo
+  tts: hexgrad/Kokoro-82M
+  voice: af_alloy
+audio:
+  stt_sample_rate: 16000      # STT input: 16 kHz mono 16-bit PCM
+  tts_sample_rate: 24000      # TTS output PCM
+  frame_ms: 20
+runs:
+  warmup: 2                   # discarded
+  t1_turns: 20
+  t2_turns: 20
+  t3_runs: 10
+  t4_replies: 20
+vad:
+  default_silence_ms: 500
+  tuned_silence_ms: 250
+  sweep_ms: [150, 250, 500, 800]
+llm:
+  system: "You are a voice assistant. Answer in one or two short sentences."
+  max_tokens: 120
+  temperature: 0.3
+target_ms: 1000

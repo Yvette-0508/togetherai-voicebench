@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+results/raw/*.jsonl
+results/audio/
+results/corpus/
+results/clips/
+results/summary.json
+results/summary.provenance.json
+site/clips/
+site/index.html
+reply.wav
+*.egg-info/

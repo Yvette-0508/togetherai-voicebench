@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>You stop talking. How long until it answers? Voice agent on Together AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --canvas:#F7F7F8; --line:#E8E8EB; --ink:#141418; --ink2:#46464E; --muted:#8B8B94;
+  --pink:#F5E7EE; --tag:#F2DCE7; --tag-ink:#4A2338; --hot:#CF3683; --blue:#2F66E0;
+  --s-ink:#26262D; --s-mid:#8E8E98; --s-light:#CFCFD6; --dot:#26262D; --code:#F4F4F6; --halftone:rgba(110,84,104,.42);
+  --sans:"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111114; --canvas:#17171B; --line:#2A2A31; --ink:#F1F1F4; --ink2:#C6C6CE; --muted:#8F8F99;
+  --pink:#241A21; --tag:#3A2331; --tag-ink:#F5D3E4; --hot:#F474B4; --blue:#86A8FF;
+  --s-ink:#E9E9EE; --s-mid:#8F8F99; --s-light:#45454E; --dot:#E9E9EE; --code:#1C1C21; --halftone:rgba(240,190,220,.28); color-scheme: dark;}}
+:root[data-theme="dark"]{
+  --bg:#111114; --canvas:#17171B; --line:#2A2A31; --ink:#F1F1F4; --ink2:#C6C6CE; --muted:#8F8F99;
+  --pink:#241A21; --tag:#3A2331; --tag-ink:#F5D3E4; --hot:#F474B4; --blue:#86A8FF;
+  --s-ink:#E9E9EE; --s-mid:#8F8F99; --s-light:#45454E; --dot:#E9E9EE; --code:#1C1C21; --halftone:rgba(240,190,220,.28); color-scheme: dark;}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--blue);text-decoration:none} a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+
+.sheet{max-width:1040px;margin:0 auto;background:var(--bg);border-left:1px solid var(--line);border-right:1px solid var(--line);min-height:100vh}
+.head{padding:72px 32px 36px}
+.eyebrow{font-size:13px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-size:clamp(38px,6.2vw,68px);line-height:1.03;font-weight:600;letter-spacing:-.045em;margin:0;max-width:15ch}
+.by{margin:16px 0 0;color:var(--ink2)}
+
+.banner{position:relative;background:var(--pink);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:26px 32px;overflow:hidden}
+.banner::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(var(--halftone) 1.15px, transparent 1.45px),radial-gradient(var(--halftone) .8px, transparent 1.1px);
+  background-size:7px 7px,7px 7px;background-position:0 0,3.5px 3.5px;
+  -webkit-mask-image:linear-gradient(100deg,transparent 42%,rgba(0,0,0,.55) 70%,#000 100%);mask-image:linear-gradient(100deg,transparent 42%,rgba(0,0,0,.55) 70%,#000 100%)}
+.banner b{display:block;font-weight:500;font-size:17px;position:relative;z-index:1}
+.banner p{margin:4px 0 0;color:var(--ink2);position:relative;z-index:1;max-width:62ch}
+
+.label{font-size:13px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0;padding:56px 32px 18px;border-bottom:1px solid var(--line)}
+.sub{font-size:14px;color:var(--muted);margin:0;padding:14px 32px 0}
+.mtag{font-family:var(--mono);font-size:12px;color:var(--ink2);border:1px solid var(--line);background:var(--canvas);padding:2px 7px;border-radius:3px;white-space:nowrap}
+.mtag.bad{background:var(--tag);border-color:var(--tag);color:var(--hot)}
+.ctag{position:absolute;top:0;right:0;background:var(--tag);color:var(--tag-ink);font-size:13px;padding:5px 11px}
+
+/* timeline */
+.legend{display:flex;flex-wrap:wrap;gap:8px 22px;padding:18px 32px 6px;font-size:13px;color:var(--ink2)}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:12px;height:12px;border-radius:2px;display:inline-block}
+.tl{padding:6px 32px 8px}
+.tlrow{display:grid;grid-template-columns:200px 1fr 112px;gap:18px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
+.tlrow:last-child{border-bottom:0}
+.tlrow.axis{padding:6px 0 2px;border-bottom:0}
+.tlname{font-weight:500;font-size:15px;line-height:1.3}
+.tlname .mtag{display:inline-block;margin-top:6px}
+.track{position:relative;height:30px;display:flex}
+.axis .track{height:18px}
+.tick{position:absolute;top:0;transform:translateX(-50%);font-family:var(--mono);font-size:11px;color:var(--muted)}
+.tick:first-child{transform:none}
+.seg{height:100%;width:0;position:relative;transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.seg+.seg{border-left:2px solid var(--bg)}
+.seg span{position:absolute;inset:0;display:flex;align-items:center;padding-left:7px;font-family:var(--mono);font-size:11px;white-space:nowrap;overflow:hidden}
+.seg.ink{background:var(--s-ink)} .seg.ink span{color:var(--bg)}
+.seg.mid{background:var(--s-mid)} .seg.mid span{color:var(--bg)}
+.seg.light{background:var(--s-light)} .seg.light span{color:var(--ink2)}
+.seg.hot{background:var(--hot)} .seg.hot span{color:#fff}
+.target{position:absolute;top:-8px;bottom:-8px;width:0;border-left:1.5px dashed var(--hot);z-index:2}
+.tlabel{position:absolute;transform:translateX(6px);font-family:var(--mono);font-size:11px;color:var(--hot);white-space:nowrap}
+.tot{font-family:var(--mono);font-size:15px;font-weight:500;text-align:right;line-height:1.3}
+.tot small{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.tot.over{color:var(--hot)}
+
+/* dot strips */
+.dots{display:grid;grid-auto-flow:column;grid-template-rows:8px;gap:4px;justify-content:start}
+.d{width:8px;height:8px;border-radius:50%;background:var(--dot);display:inline-block}
+.d.f{background:var(--hot)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.go .d{animation:pop .26s cubic-bezier(.3,1.5,.6,1) both}
+@media (prefers-reduced-motion: reduce){.seg,.fill{transition:none!important}.go .d{animation:none}}
+
+/* knob tables (VAD sweep, TTS segment) */
+.knob{padding:6px 32px 10px}
+.krow{display:grid;grid-template-columns:150px 1fr 1fr;gap:24px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.krow:last-child{border-bottom:0}
+.krow.hd{padding:10px 0 6px;font-size:12px;color:var(--muted);border-bottom:0}
+.krow .k{font-family:var(--mono);font-size:14px;display:flex;align-items:center;gap:8px}
+.krow.def .k{font-weight:500}
+.metric{display:flex;align-items:center;gap:12px}
+.metric .num{font-family:var(--mono);font-size:13px;color:var(--ink2);min-width:64px}
+.metric .num.bad{color:var(--hot)}
+.bar{flex:1;max-width:220px;height:8px;background:var(--canvas);border-radius:2px;overflow:hidden}
+.fill{display:block;height:100%;width:0;background:var(--s-ink);transition:width .7s cubic-bezier(.2,.8,.2,1)}
+
+/* listen */
+.listenrow{padding:16px 0;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.listenrow:last-child{border-bottom:0}
+.listenrow .top{display:flex;align-items:center;gap:12px}
+.listenrow .nm{font-weight:500;font-size:15px}
+.playtrack{position:relative;height:10px;background:var(--canvas);border-radius:3px;overflow:visible;cursor:pointer}
+.playtrack .ph{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--hot);left:0}
+.playtrack .mk{position:absolute;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--s-ink);transform:translateX(-50%)}
+.playtrack .mk.lab{font-size:11px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+.listenrow button{appearance:none;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:4px;padding:4px 12px;font:500 13px var(--sans);cursor:pointer}
+.listenrow button:hover{border-color:var(--hot);color:var(--hot)}
+
+/* checks */
+.rows{list-style:none;margin:0;padding:0}
+.rows li{display:grid;grid-template-columns:1fr auto 64px;gap:18px;align-items:center;padding:18px 32px;border-bottom:1px solid var(--line)}
+.rows .nm{font-weight:500}
+.rows .nm .mtag{margin-left:8px}
+.rows .note{display:block;color:var(--muted);font-size:14px;font-style:italic;font-weight:400;margin-top:3px}
+.cnt{font-family:var(--mono);font-size:13px;text-align:right;color:var(--ink2)}
+.cnt.bad{color:var(--hot)}
+.val{font-family:var(--mono);font-size:20px;font-weight:500}
+
+/* fixes */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);margin-top:-1px}
+.fix{position:relative;padding:28px 32px 30px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.fix+.fix{border-left:1px solid var(--line)}
+.viz{height:112px;display:flex;flex-direction:column;justify-content:center;gap:10px;margin:14px 0 18px}
+.huge{font-size:72px;line-height:.9;font-weight:600;letter-spacing:-.05em;color:var(--hot)}
+.huge small{font-size:20px;letter-spacing:0;color:var(--muted);font-weight:400;margin-left:6px}
+.share{display:flex;height:22px;width:100%;max-width:240px}
+.share .seg{transition:none}
+.crow{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.crow:last-child{border-bottom:0}
+.crow code{font-family:var(--mono);font-size:12.5px}
+.crow .r{font-family:var(--mono);font-size:12px;color:var(--ink2)} .crow .r.bad{color:var(--hot)}
+.fix h3{margin:0;font-size:18px;font-weight:500;letter-spacing:-.01em}
+.fix .why{margin:0;color:var(--muted)}
+.fix .do{margin:14px 0 0;color:var(--ink2);font-size:15px}
+.fix .target-line{margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+
+/* api compare */
+.cmp{display:grid;grid-template-columns:1fr 1fr}
+.pane{position:relative;padding:26px 32px 30px;border-bottom:1px solid var(--line);min-width:0}
+.pane+.pane{border-left:1px solid var(--line)}
+.pane h3{margin:0 0 4px;font-size:18px;font-weight:500}
+.pane .lines{font-family:var(--mono);font-size:13px;color:var(--muted);margin:0 0 16px}
+.pane .lines b{font-size:30px;font-weight:500;color:var(--ink);letter-spacing:-.02em;margin-right:6px}
+.pane.today .lines b{color:var(--hot)}
+.pane pre{margin:0;font-family:var(--mono);font-size:12.5px;line-height:1.65;background:var(--code);padding:14px 16px;overflow-x:auto;border-radius:4px}
+.pane pre .c{color:var(--muted)}
+
+.tagrow{display:flex;flex-wrap:wrap;gap:8px;padding:24px 32px 28px;border-bottom:1px solid var(--line)}
+.tagrow .mtag{font-size:13px;padding:5px 10px}
+footer{padding:28px 32px 56px;font-size:14px;color:var(--muted);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+@media (max-width:860px){.grid3,.cmp{grid-template-columns:1fr}.fix+.fix,.pane+.pane{border-left:0}}
+@media (max-width:620px){
+  .head{padding:48px 20px 28px}
+  .banner,.legend,.tl,.knob,.tagrow,footer,.sub{padding-left:20px;padding-right:20px}
+  .label{padding:44px 20px 14px}
+  .tlrow{grid-template-columns:1fr auto;gap:10px 12px}
+  .tlrow .track{grid-column:1/-1;grid-row:2}
+  .tlrow.axis{display:none}
+  .tlrow .tlname .mtag{margin:0 0 0 6px}
+  .krow{grid-template-columns:1fr;gap:8px}
+  .krow.hd{display:none}
+  .rows li{padding:16px 20px;grid-template-columns:1fr auto;gap:8px 12px}
+  .rows li .dots,.rows li .val,.rows li .cnt{grid-row:2}
+  .fix,.pane{padding:28px 20px 30px}
+}
+</style>
+</head>
+<body>
+<main class="sheet">
+  <header class="head">
+    <p class="eyebrow" id="eyebrow"></p>
+    <h1>You stop talking. How long until it answers?</h1>
+    <p class="by" id="by"></p>
+  </header>
+  <div class="banner" id="banner"></div>
+
+  <h2 class="label">One turn, end of speech to first audio</h2>
+  <div id="timeline"></div>
+
+  <h2 class="label">Knob 1: how long to wait for silence</h2>
+  <p class="sub">Shorter is faster, and cuts people off mid-thought. One dot per turn.</p>
+  <div class="knob" id="vad"></div>
+
+  <h2 class="label">Knob 2: when TTS starts speaking</h2>
+  <p class="sub">Text streamed from the model token by token. One dot per reply; red means playback stalled.</p>
+  <div class="knob" id="segment"></div>
+
+  <div id="listen-wrap" style="display:none">
+  <h2 class="label">Listen</h2>
+  <p class="sub">Real recordings from the harness, gaps at measured times. The playhead moves along the bar; ticks mark the events below.</p>
+  <div class="knob" id="listen"></div>
+  </div>
+
+  <h2 class="label">Agent behavior</h2>
+  <ul class="rows" id="checks"></ul>
+
+  <h2 class="label">Fix first</h2>
+  <div class="grid3" id="fixes"></div>
+
+  <h2 class="label">What I would build</h2>
+  <div class="cmp" id="cmp"></div>
+
+  <h2 class="label">Works as is</h2>
+  <div class="tagrow" id="works"></div>
+
+  <footer id="footer"></footer>
+</main>
+
+<!-- The test script replaces this block with real results. -->
+<script id="report-data" type="application/json">
+{
+  "sample": true,
+  "meta": {"author": "Yvette Pan", "role": "Model APIs & Developer Experience", "date": "Nov 5, 2026",
+           "repo": "https://github.com/your-handle/together-voice-test"},
+  "summary": "A voice agent built only on Together AI: realtime STT, a streamed chat model, realtime TTS.",
+  "target_ms": 1000,
+  "target_label": "1 s",
+  "stages": [
+    {"id": "vad", "label": "Waiting for silence", "tone": "hot"},
+    {"id": "stt", "label": "Final transcript", "tone": "light"},
+    {"id": "llm", "label": "First sentence from the model", "tone": "ink"},
+    {"id": "tts", "label": "First audio", "tone": "mid"}
+  ],
+  "turns": [
+    {"label": "Default settings", "tag": "silence 500 ms", "p50": {"vad": 500, "stt": 140, "llm": 330, "tts": 190}, "p90": 1480},
+    {"label": "Tuned VAD", "tag": "silence 250 ms", "p50": {"vad": 250, "stt": 140, "llm": 330, "tts": 190}, "p90": 1190},
+    {"label": "With a tool call", "tag": "1 function call", "p50": {"vad": 250, "stt": 140, "llm": 790, "tts": 190}, "p90": 1720}
+  ],
+  "vad_sweep": {"n": 20, "rows": [
+    {"ms": 150, "cut": 7, "p50": 810},
+    {"ms": 250, "cut": 3, "p50": 910},
+    {"ms": 500, "cut": 1, "p50": 1160, "default": true},
+    {"ms": 800, "cut": 0, "p50": 1460}
+  ]},
+  "segment": {"n": 20, "rows": [
+    {"mode": "immediate", "ttfa": 140, "stalls": 6},
+    {"mode": "sentence", "ttfa": 310, "stalls": 0, "default": true},
+    {"mode": "never", "ttfa": 880, "stalls": 0}
+  ]},
+  "checks": [
+    {"name": "Long question stays one turn", "tag": "8 s of speech", "pass": 3, "n": 10, "note": "Split at the 5 s segment limit; the agent answered the first half."},
+    {"name": "Tool call valid inside the turn", "pass": 10, "n": 10},
+    {"name": "Transcript matches the script", "tag": "WER ≤ 5%", "pass": 9, "n": 10},
+    {"name": "OpenAI voice names", "tag": "voice=alloy", "pass": 0, "n": 10, "note": "Voices are named per model; Kokoro calls it af_alloy."},
+    {"name": "input_text_buffer.clear stops audio", "pass": 0, "n": 10, "note": "Drops queued text only; the sentence in progress keeps playing."},
+    {"name": "context.cancel to silence", "kind": "value", "value": "90 ms", "note": "Cancel sent to last audio chunk received, p50."}
+  ],
+  "fixes": [
+    {"title": "Turn-taking eats the budget", "why": "Together's own phone-agent guide moves VAD client-side to avoid it",
+     "viz": {"type": "share", "turn": 0, "stage": "vad"},
+     "do": "A voice-agent preset and semantic end-of-turn, not one silence default.",
+     "target": "p50 under 800 ms, end of speech to audio"},
+    {"title": "Three APIs to glue", "why": "STT has an SDK, TTS has none; auth and event names differ",
+     "viz": {"type": "big", "text": "180", "small": "lines of glue"},
+     "do": "One realtime voice session, or an SDK helper that runs the loop.",
+     "target": "first working voice agent in under 30 min"},
+    {"title": "clear is not stop", "why": "the real stop lives in the multi-context section",
+     "viz": {"type": "rows", "rows": [["input_text_buffer.clear", "keeps playing", true], ["context.cancel", "stops", false]]},
+     "do": "Document one barge-in recipe; make cancel work on the default context.",
+     "target": "interrupt to silence under 150 ms"}
+  ],
+  "compare": {
+    "today": {"lines": 180, "code": "<span class=\"c\"># 1. STT: WebSocket, Python SDK in beta</span>\nstt = client.beta.realtime.transcription(\n    model=STT, sample_rate=16_000)\n\n<span class=\"c\"># 2. Model: HTTP stream</span>\nstream = client.chat.completions.create(\n    model=LLM, stream=True, tools=TOOLS, ...)\n\n<span class=\"c\"># 3. TTS: raw WebSocket, no SDK</span>\ntts = await ws_connect(TTS_URL, headers=AUTH)\n\n<span class=\"c\"># then you write: end-of-turn, sentence\n# splitting, the tool loop, barge-in with\n# context.cancel, reconnects, 16 kHz in /\n# 24 kHz out</span>"},
+    "proposed": {"lines": 30, "code": "session = client.realtime.voice(\n    stt=STT, model=LLM, tts=TTS,\n    voice=\"af_alloy\",\n    turn_detection={\"type\": \"semantic\"},\n    tools=TOOLS,\n)\n\nasync for event in session.run(mic):\n    if event.type == \"response.audio.delta\":\n        speaker.play(event.audio)\n\n<span class=\"c\"># barge-in handled in the session;\n# session.cancel() when you need it</span>"}
+  },
+  "works": ["server VAD presets", "STT auto-reconnect with replay", "context.cancel", "segment modes", "word timestamps", "pronunciation dictionary", "μ-law for phone calls"],
+  "footnote": "20 turns per row, synthetic speech, one region, measured client-side. One default model per stage; model choice is not the point here."
+}
+</script>
+
+<script>
+(function(){
+  const D = JSON.parse(document.getElementById('report-data').textContent);
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const fmt = n => n.toLocaleString('en-US');
+  let row = 0;
+  function dots(pass, n, failFirst){
+    let h = '<span class="dots" role="img" aria-label="' + pass + ' of ' + n + '">';
+    for (let i = 0; i < n; i++){
+      const fail = failFirst ? i < n - pass : i >= pass;
+      h += '<i class="d' + (fail ? ' f' : '') + '" style="animation-delay:' + (row * 50 + i * 12) + 'ms"></i>';
+    }
+    row++;
+    return h + '</span>';
+  }
+
+  $('eyebrow').textContent = D.meta.date + ' · Voice agent test';
+  $('by').textContent = D.meta.author + ', for ' + D.meta.role;
+  $('banner').innerHTML = D.sample
+    ? '<b>Sample data only</b><p>Every number below is a placeholder until the real test run.</p>'
+    : '<b>' + esc(D.summary) + '</b><p>' + esc(D.footnote) + '</p>';
+
+  // Timeline (per design.md 16: p50_total as the total when present)
+  const totals = D.turns.map(t =>
+    (t.p50_total != null && t.p50_total > 0) ? t.p50_total
+      : D.stages.reduce((s, st) => s + (t.p50[st.id] || 0), 0));
+  const maxV = Math.max(D.target_ms, ...totals, ...D.turns.map(t => t.p90 || 0));
+  const scale = Math.ceil(maxV / 250) * 250;
+  const pct = v => v / scale * 100;
+  let h = '<div class="legend">' + D.stages.map(s => '<span><i class="seg ' + s.tone + '" style="width:12px"></i>' + esc(s.label) + '</span>').join('') + '</div><div class="tl">';
+  let ticks = '';
+  for (let v = 0; v <= scale; v += 250) ticks += '<span class="tick" style="left:' + pct(v) + '%">' + (v === 0 ? '0' : fmt(v)) + '</span>';
+  h += '<div class="tlrow axis"><span></span><div class="track">' + ticks + '</div><span></span></div>';
+  D.turns.forEach((t, i) => {
+    const total = totals[i];
+    h += '<div class="tlrow"><div class="tlname">' + esc(t.label) + '<br><span class="mtag">' + esc(t.tag) + '</span></div><div class="track" role="img" aria-label="' +
+      esc(t.label + ': ' + D.stages.map(s => s.label + ' ' + t.p50[s.id] + ' ms').join(', ') + ', total ' + total + ' ms') + '">';
+    D.stages.forEach(s => { const v = t.p50[s.id] || 0; h += '<div class="seg ' + s.tone + '" data-w="' + pct(v).toFixed(2) + '"><span>' + (pct(v) > 7 ? v : '') + '</span></div>'; });
+    h += '<span class="target" style="left:' + pct(D.target_ms) + '%"></span>' + (i === 0 ? '<span class="tlabel" style="left:' + pct(D.target_ms) + '%;top:-24px">' + esc(D.target_label) + '</span>' : '') + '</div>';
+    h += '<div class="tot' + (total > D.target_ms ? ' over' : '') + '">' + fmt(total) + ' ms<small>p50' + (t.p90 ? ', p90 ' + fmt(t.p90) : '') + '</small></div></div>';
+  });
+  $('timeline').innerHTML = h + '</div>';
+
+  // Knob 1: VAD sweep
+  const V = D.vad_sweep, maxL = Math.max(...V.rows.map(r => r.p50));
+  $('vad').innerHTML = '<div class="krow hd"><span>Silence wait</span><span>Turns cut off early</span><span>Latency, p50</span></div>' + V.rows.map(r =>
+    '<div class="krow' + (r.default ? ' def' : '') + '"><span class="k">' + r.ms + ' ms' + (r.default ? ' <span class="mtag">default</span>' : '') + '</span>' +
+    '<span class="metric">' + dots(V.n - r.cut, V.n, false) + '<span class="num' + (r.cut ? ' bad' : '') + '">' + r.cut + '/' + V.n + '</span></span>' +
+    '<span class="metric"><span class="bar"><span class="fill" data-w="' + (r.p50 / maxL * 100).toFixed(1) + '"></span></span><span class="num' + (r.p50 > D.target_ms ? ' bad' : '') + '">' + fmt(r.p50) + ' ms</span></span></div>').join('');
+
+  // Knob 2: TTS segment mode
+  const S = D.segment, maxT = Math.max(...S.rows.map(r => r.ttfa));
+  $('segment').innerHTML = '<div class="krow hd"><span>segment=</span><span>First audio</span><span>Replies with a stall</span></div>' + S.rows.map(r =>
+    '<div class="krow' + (r.default ? ' def' : '') + '"><span class="k">' + esc(r.mode) + (r.default ? ' <span class="mtag">default</span>' : '') + '</span>' +
+    '<span class="metric"><span class="bar"><span class="fill" data-w="' + (r.ttfa / maxT * 100).toFixed(1) + '"></span></span><span class="num">' + fmt(r.ttfa) + ' ms</span></span>' +
+    '<span class="metric">' + dots(S.n - r.stalls, S.n, false) + '<span class="num' + (r.stalls ? ' bad' : '') + '">' + r.stalls + '/' + S.n + '</span></span></div>').join('');
+
+  // Checks
+  $('checks').innerHTML = D.checks.map(c => {
+    const nm = '<span class="nm">' + esc(c.name) + (c.tag ? '<span class="mtag">' + esc(c.tag) + '</span>' : '') + (c.note ? '<span class="note">' + esc(c.note) + '</span>' : '') + '</span>';
+    if (c.kind === 'value') return '<li>' + nm + '<span class="val">' + esc(c.value) + '</span><span></span></li>';
+    return '<li>' + nm + dots(c.pass, c.n, false) + '<span class="cnt' + (c.pass < c.n ? ' bad' : '') + '">' + c.pass + '/' + c.n + '</span></li>';
+  }).join('');
+
+  // Fixes
+  $('fixes').innerHTML = D.fixes.map((f, i) => {
+    let viz;
+    if (f.viz.type === 'share'){
+      const t = D.turns[f.viz.turn], tot = totals[f.viz.turn];
+      viz = '<div class="huge">' + Math.round(t.p50[f.viz.stage] / tot * 100) + '<small>% of the turn</small></div><div class="share">' +
+        D.stages.map(s => '<div class="seg ' + (s.id === f.viz.stage ? 'hot' : 'light') + '" style="width:' + (t.p50[s.id] / tot * 100) + '%"></div>').join('') + '</div>';
+    } else if (f.viz.type === 'rows'){
+      viz = f.viz.rows.map(([code, res, bad]) => '<div class="crow"><code>' + esc(code) + '</code><span class="r' + (bad ? ' bad' : '') + '">' + esc(res) + '</span></div>').join('');
+    } else {
+      viz = '<div class="huge">' + esc(f.viz.text) + '<small>' + esc(f.viz.small || '') + '</small></div>';
+    }
+    return '<div class="fix"><span class="ctag">Priority ' + (i + 1) + '</span><div class="viz">' + viz + '</div><h3>' + esc(f.title) + '</h3><p class="why">' + esc(f.why) +
+      '</p><p class="do">' + esc(f.do) + '</p><span class="target-line">target: ' + esc(f.target) + '</span></div>';
+  }).join('');
+
+  // API compare (code strings are authored in the data block, comments pre-marked)
+  const C = D.compare;
+  $('cmp').innerHTML =
+    '<div class="pane today"><h3>Today</h3><p class="lines"><b>' + C.today.lines + '</b>lines of glue</p><pre><code>' + C.today.code + '</code></pre></div>' +
+    '<div class="pane"><span class="ctag">Proposal, not a Together API</span><h3>One voice session</h3><p class="lines"><b>' + C.proposed.lines + '</b>lines</p><pre><code>' + C.proposed.code + '</code></pre></div>';
+
+  // Listen (clips recorded by the harness; playhead follows markers)
+  if (D.clips && D.clips.length){
+    $('listen-wrap').style.display = '';
+    $('listen').innerHTML = D.clips.map((c, i) =>
+      '<div class="listenrow"><div class="top"><button data-clip="' + i + '">&#9654; Play</button>' +
+      '<span class="nm">' + esc(c.label || c.id) + '</span>' +
+      '<span class="mtag" id="ctime-' + i + '"></span></div>' +
+      '<div class="playtrack" id="ptrack-' + i + '"><span class="ph" id="ph-' + i + '"></span></div></div>').join('');
+    D.clips.forEach((c, i) => {
+      const audio = new Audio(c.src);
+      const ph = document.getElementById('ph-' + i);
+      const track = document.getElementById('ptrack-' + i);
+      const btn = document.querySelector('button[data-clip="' + i + '"]');
+      const time = document.getElementById('ctime-' + i);
+      audio.addEventListener('loadedmetadata', () => {
+        (c.markers || []).forEach(m => {
+          const el = document.createElement('span');
+          el.className = 'mk'; el.style.left = (m.t_ms / 1000 / audio.duration * 100) + '%';
+          el.title = m.label + ' (' + m.t_ms + ' ms)';
+          const lab = document.createElement('span');
+          lab.className = 'mk lab'; lab.style.left = (m.t_ms / 1000 / audio.duration * 100) + '%';
+          lab.style.top = '9px'; lab.style.height = 'auto'; lab.style.background = 'none';
+          lab.textContent = m.label;
+          track.appendChild(el); track.appendChild(lab);
+        });
+      });
+      audio.addEventListener('timeupdate', () => {
+        if (audio.duration) ph.style.left = (audio.currentTime / audio.duration * 100) + '%';
+        time.textContent = (audio.currentTime * 1000).toFixed(0) + ' ms';
+      });
+      audio.addEventListener('ended', () => { btn.innerHTML = '&#9654; Play'; });
+      track.addEventListener('click', ev => {
+        if (!audio.duration) return;
+        const r = track.getBoundingClientRect();
+        audio.currentTime = (ev.clientX - r.left) / r.width * audio.duration;
+      });
+      btn.addEventListener('click', () => {
+        if (audio.paused) { audio.play(); btn.innerHTML = '&#10074;&#10074; Pause'; }
+        else { audio.pause(); btn.innerHTML = '&#9654; Play'; }
+      });
+    });
+  }
+
+  $('works').innerHTML = D.works.map(w => '<span class="mtag">' + esc(w) + '</span>').join('');
+  $('footer').innerHTML = '<span>' + esc(D.footnote) + '</span><a href="' + esc(D.meta.repo) + '">Code and raw results</a>';
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.querySelectorAll('[data-w]').forEach(el => el.style.width = el.dataset.w + '%');
+    document.querySelector('.sheet').classList.add('go');
+  }));
+})();
+</script>
+</body>
+</html>
