@@ -1,4 +1,4 @@
-# VoiceBench
+# togetherai-voicebench
 
 A local test harness that measures a voice agent built on Together AI
 (realtime STT → streamed chat → realtime TTS) and fills a static report page
@@ -62,7 +62,7 @@ credentials — raw logs and the API key never leave your machine.
 - One region, one residential network. T0 separates network from server
   time, but absolute latency varies with where you run it.
 - One default model per stage; this is not a model comparison.
-- `VoiceBench` measures client-side; it can't see queuing inside Together's
+- The harness measures client-side; it can't see queuing inside Together's
   infra.
 
 ## Layout
