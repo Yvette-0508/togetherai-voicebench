@@ -133,9 +133,14 @@ class STTSession:
         await self._send({
             "type": "transcription_session.updated",
             "session": {
-                "turn_detection": "server_vad",
-                "threshold": self.threshold,
-                "min_silence_duration_ms": self.silence_ms,
+                # server expects turn_detection as an OBJECT (OpenAI-style);
+                # sending "server_vad" as a string gets rejected with
+                # conversation.item.input_audio_transcription.failed
+                "turn_detection": {
+                    "type": "server_vad",
+                    "threshold": self.threshold,
+                    "min_silence_duration_ms": self.silence_ms,
+                },
             },
         })
 

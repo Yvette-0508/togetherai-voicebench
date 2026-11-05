@@ -163,6 +163,7 @@ async def synthesize_one(api_key: str, model: str, voice: str, text: str,
         g = gcd(stt_rate, sr)
         audio = resample_poly(audio, stt_rate // g, sr // g).astype("float32")
     pcm16 = np.clip(audio, -1.0, 1.0)
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     sf.write(out_path, pcm16, stt_rate, subtype="PCM_16")
     duration_ms = int(len(pcm16) / stt_rate * 1000)
     return {"duration_ms": duration_ms}

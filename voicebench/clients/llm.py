@@ -99,6 +99,7 @@ class SentenceSplitter:
 async def stream_chat(client: AsyncOpenAI, model: str, system: str, user: str,
                       *, max_tokens: int = 120, temperature: float = 0.3,
                       tools: list[dict] | None = None,
+                      extra_body: dict | None = None,
                       on_sentence: Callable[[str], Awaitable[None]] | None = None,
                       on_token: Callable[[str, float], None] | None = None,
                       on_event: Callable[[str, dict], None] | None = None) -> LLMResult:
@@ -126,6 +127,7 @@ async def stream_chat(client: AsyncOpenAI, model: str, system: str, user: str,
             model=model, messages=messages, stream=True,
             max_tokens=max_tokens, temperature=temperature,
             tools=use_tools or None,
+            extra_body=extra_body or None,
         )
         tool_acc: dict[int, dict] = {}
         async for chunk in stream:

@@ -160,6 +160,7 @@ async def run_turn(cfg: dict, stt: STTSession, tts: TTSSession,
             cfg["llm"]["system"], state["final_text"],
             max_tokens=cfg["llm"]["max_tokens"], temperature=cfg["llm"]["temperature"],
             tools=[WEATHER_TOOL] if tools else None,
+            extra_body=cfg["llm"].get("extra_body"),
             on_sentence=send_sentence, on_event=on_llm_event)
 
         if result.sentences:

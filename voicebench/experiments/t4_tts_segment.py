@@ -44,7 +44,8 @@ async def record_replies(cfg: dict, llm_client: AsyncOpenAI, n: int) -> list[dic
                 llm_client, cfg["models"]["llm"], cfg["llm"]["system"],
                 prompts[i % len(prompts)],
                 max_tokens=cfg["llm"]["max_tokens"],
-                temperature=cfg["llm"]["temperature"], on_token=on_token)
+                temperature=cfg["llm"]["temperature"],
+                extra_body=cfg["llm"].get("extra_body"), on_token=on_token)
         except Exception as e:
             print(f"  t4 record reply {i} failed: {e}")
             continue

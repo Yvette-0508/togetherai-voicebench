@@ -1,8 +1,9 @@
 client_location: "San Francisco, home Wi-Fi"   # printed in the page footnote
 models:
   stt: openai/whisper-large-v3
-  # fast instruct model from the serverless list; confirm availability on first run
-  llm: meta-llama/Llama-3.3-70B-Instruct-Turbo
+  # Llama/Qwen Turbo are no longer serverless (Nov 2026). GLM-5.2 is, and with
+  # reasoning disabled it streams first text in ~0.25 s and handles tool calls.
+  llm: zai-org/GLM-5.2
   tts: hexgrad/Kokoro-82M
   voice: af_alloy
 audio:
@@ -23,4 +24,7 @@ llm:
   system: "You are a voice assistant. Answer in one or two short sentences."
   max_tokens: 120
   temperature: 0.3
+  # GLM-5.2 is a reasoning model; thinking adds seconds before the first word.
+  extra_body:
+    reasoning: {enabled: false}
 target_ms: 1000

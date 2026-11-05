@@ -9,6 +9,6 @@ results/clips/
 results/summary.json
 results/summary.provenance.json
 site/clips/
-site/index.html
 reply.wav
 *.egg-info/
+results/verify.json
